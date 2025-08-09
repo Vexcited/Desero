@@ -1,0 +1,49 @@
+{
+  "name": "desero",
+  "version": "0.0.0",
+  "description": "Quickly write models to deserialize and serialize an object to another.",
+  "author": "Mikkel ALMONTE--RINGAUD <contact@vexcited.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vexcited/Desero.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Vexcited/Desero/issues"
+  },
+  "keywords": [
+    "serialization",
+    "deserialization",
+    "serde"
+  ],
+  "sideEffects": false,
+  "exports": {
+    "import": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "require": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup"
+  },
+  "devDependencies": {
+    "@swc/core": "^1.13.3",
+    "@types/bun": "^1.2.19",
+    "@vexcited/eslint-config": "^0.1.1",
+    "eslint": "^9.32.0",
+    "jiti": "^2.5.1",
+    "terser": "^5.43.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}
