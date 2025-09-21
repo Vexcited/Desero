@@ -1,6 +1,8 @@
 import { SchemaType } from "./type";
 
-const enumeration = <T>(Enum: T): T[keyof T] => {
+const enumeration = <T>(Enum: T): {
+  [K in keyof T]: T[K] extends (...args: any[]) => any ? never : T[K]
+}[keyof T] => {
   const value = new SchemaType();
   value.enum = Enum;
   return value as any;
