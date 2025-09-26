@@ -1,6 +1,7 @@
 export { deserialize } from "./deserialize";
 
-// Decorators that can be applied to fields of your model.
+// Decorators that can be applie d to fields of your model.
+export { defaultValue } from "./fields/defaultValue";
 export { deserializeWith } from "./fields/deserializeWith";
 export { rename } from "./fields/rename";
 
