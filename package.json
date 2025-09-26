@@ -1,6 +1,6 @@
 {
   "name": "desero",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Quickly write models to deserialize and serialize an object to another.",
   "author": "Mikkel ALMONTE--RINGAUD <contact@vexcited.com>",
   "license": "MIT",
