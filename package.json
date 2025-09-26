@@ -37,11 +37,11 @@
     "build": "tsup"
   },
   "devDependencies": {
-    "@swc/core": "^1.13.5",
+    "@swc/core": "^1.13.19",
     "@types/bun": "^1.2.22",
     "@vexcited/eslint-config": "^0.1.1",
     "eslint": "^9.36.0",
-    "jiti": "^2.5.1",
+    "jiti": "^2.6.0",
     "terser": "^5.44.0",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2"
