@@ -13,6 +13,6 @@
     "isolatedModules": true,
     "skipLibCheck": true
   },
-  "include": ["src", "examples", "eslint.config.ts", "tsup.config.ts"],
+  "include": ["src", "examples", "eslint.config.ts", "bunup.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
