@@ -1,3 +1,4 @@
+import { SchemaError } from "./errors/SchemaError";
 import { getModelMetadata } from "./metadata";
 import { SchemaType } from "./schema/type";
 
@@ -42,24 +43,24 @@ export function deserialize<T extends new (...args: any[]) => any>(Model: T, dat
         else value = info.defaultValue;
 
         if (value === null) {
-          throw new Error(`default value for field "${field}" cannot be "null"`);
+          throw new SchemaError(Model.name, field, `default value cannot be "null"`);
         }
         else if (schema.typeof && typeof value !== schema.typeof) {
-          throw new Error(`default value for field "${field}" has incorrect type, got "${typeof value}" and expected "${schema.typeof}"`);
+          throw new SchemaError(Model.name, field, `default value has incorrect type, got "${typeof value}" and expected "${schema.typeof}"`);
         }
         else if (schema.instanceof && !(value instanceof schema.instanceof)) {
-          throw new Error(`default value for field "${field}" is not an instance of "${schema.instanceof.name}"`);
+          throw new SchemaError(Model.name, field, `default value is not an instance of "${schema.instanceof.name}"`);
         }
         else if (schema.enum && !Object.values(schema.enum).includes(value)) {
-          throw new Error(`default value (${value}) for field "${field}" does not match any value of provided enum`);
+          throw new SchemaError(Model.name, field, `default value (${value}) does not match any value of provided enum`);
         }
         else if (schema.reference) {
-          throw new Error(`default value is not allowed on reference fields ("${field}")`);
+          throw new SchemaError(Model.name, field, `default value is not allowed on reference fields ("${field}")`);
         }
       }
       // `t.option(...)`
       else if (!schema.optional) {
-        throw new Error(`required field "${field}" is undefined in provided data`);
+        throw new SchemaError(Model.name, field, `not optional but got "${value}"`);
       }
       else {
         value = null;
@@ -76,7 +77,7 @@ export function deserialize<T extends new (...args: any[]) => any>(Model: T, dat
       else if (schema.array) {
         const processArray = (value: any, schema: SchemaType): any => {
           if (!Array.isArray(value)) {
-            throw new Error(`expected array but got "${typeof value}"`);
+            throw new SchemaError(Model.name, field, `expected array but got "${typeof value}"`);
           }
 
           return value.map((item) => {

@@ -1,4 +1,5 @@
 export { deserialize } from "./deserialize";
+export { SchemaError } from "./errors/SchemaError";
 
 // Decorators that can be applie d to fields of your model.
 export { defaultValue } from "./fields/defaultValue";
