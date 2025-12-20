@@ -28,6 +28,7 @@ interface Deserializer {
     defaults: Record<string, unknown>;
     deserializers: Record<string, unknown>;
     references: Record<string, unknown>;
+    SchemaError: typeof SchemaError;
   };
 }
 
@@ -80,57 +81,95 @@ const decodeArray = (
 };
 
 function generateDeserializerFunction(compiled: CompiledModel): Deserializer {
-  let body = "const model=Object.create(prototype);";
+  // mod = model
+  // proto = prototype
+  // _     = helpers
+  // $     = data
+  // $[i]  = model/data key/value
+  //
+  // We're doing this to prevent conflicting names.
 
-  const helpers = {
+  let body = "const mod=Object.create(proto);";
+
+  const _ = {
     arrays: {} as Record<string, any>,
     defaults: {} as Record<string, any>,
     deserializers: {} as Record<string, any>,
-    references: {} as Record<string, any>
+    references: {} as Record<string, any>,
+    SchemaError
   };
 
-  for (const field of compiled.fields) {
-    const { defaultValue, deserializer, key, rename, schema } = field;
-    body += `let ${key}=data["${rename || key}"];`;
+  for (let i = 0; i < compiled.fields.length; i++) {
+    const {
+      defaultValue,
+      deserializer,
+      key: unsafeFieldKey,
+      rename: unsafeRenameFieldKey,
+      schema
+    } = compiled.fields[i];
+
+    const varn = `$${i}`;
+    const safeFieldKey = JSON.stringify(unsafeFieldKey);
+    body += `let ${varn}=$[${unsafeRenameFieldKey ? JSON.stringify(unsafeRenameFieldKey) : safeFieldKey}];`;
 
     if (defaultValue !== undefined) {
-      helpers.defaults[key] = defaultValue;
+      _.defaults[varn] = defaultValue;
 
       if (typeof defaultValue === "function") {
-        body += `if(${key}==null)${key}=helpers.defaults["${key}"]();`;
+        body += `${varn}??=_.defaults.${varn}();`;
       }
       else {
-        body += `if(${key}==null)${key}=helpers.defaults["${key}"];`;
+        body += `${varn}??=_.defaults.${varn};`;
+      }
+
+      body += `if(${varn}===null)throw new _.SchemaError("${compiled.name}",${safeFieldKey},"default value cannot be null");`;
+
+      if (schema.typeof) {
+        body += `if(typeof ${varn}!=="${schema.typeof}")throw new _.SchemaError("${compiled.name}",${safeFieldKey},"default value has incorrect type, got \\""+typeof ${varn}+"\\" and expected \\"${schema.typeof}\\"");`;
+      }
+
+      if (schema.instanceof) {
+        _.defaults[`${varn}$1`] = schema.instanceof;
+        body += `if(!(${varn} instanceof _.defaults["${varn}$1"]))throw new _.SchemaError("${compiled.name}",${safeFieldKey},"default value is not an instance of \\"${schema.instanceof.name}\\"");`;
+      }
+
+      if (schema.enum) {
+        _.defaults[`${varn}$2`] = Object.values(schema.enum);
+        body += `if(!_.defaults.${varn}$2.includes(${varn}))throw new _.SchemaError("${compiled.name}",${safeFieldKey},\`default value (\${safe}) does not match any value of provided enum\`);`;
+      }
+
+      if (schema.reference) {
+        body += `throw new _.SchemaError("${compiled.name}",${safeFieldKey},"default value is not allowed on reference fields (${safeFieldKey})");`;
       }
     }
     else if (!schema.optional) {
-      body += `if(${key}==null)throw new Error("${compiled.name}::${key}: not optional but got "+${key});`;
+      body += `if(${varn}==null)throw new _.SchemaError("${compiled.name}",${safeFieldKey},\`not optional but got "\${${varn}}"\`);`;
     }
     else {
-      body += `if(${key}==null)${key}=null;`;
+      body += `${varn}||=null;`;
     }
 
     // Handle transformations (only for non-null values)
     if (deserializer) {
-      helpers.deserializers[key] = deserializer;
-      body += `if (${key}!==null)${key}=helpers.deserializers["${key}"](${key},model);`;
+      _.deserializers[varn] = deserializer;
+      body += `if(${varn}!=null)${varn}=_.deserializers.${varn}(${varn},mod);`;
     }
     else if (schema.array) {
-      helpers.arrays[key] = (value: any) =>
-        decodeArray(compiled, key, value, schema.array!);
-      body += `if(${key}!==null)${key}=helpers.arrays["${key}"](${key});`;
+      _.arrays[varn] = (value: any) =>
+        decodeArray(compiled, unsafeFieldKey, value, schema.array!);
+      body += `if(${varn}!=null)${varn}=_.arrays.${varn}(${varn});`;
     }
     else if (schema.reference) {
-      helpers.references[key] = (value: any) =>
+      _.references[varn] = (value: any) =>
         deserialize(schema.reference!, value);
-      body += `if(${key}!==null)${key}=helpers.references["${key}"](${key});`;
+      body += `if(${varn}!=null)${varn}=_.references.${varn}(${varn});`;
     }
 
-    body += `model["${key}"]=${key};`;
+    body += `mod[${safeFieldKey}]=${varn};`;
   }
 
-  body += "return model";
-  return { body, helpers };
+  body += "return mod";
+  return { body, helpers: _ };
 }
 
 function getCompiledModel<T extends Ctor<any>>(Model: T): CompiledModel {
@@ -163,9 +202,8 @@ function getCompiledModel<T extends Ctor<any>>(Model: T): CompiledModel {
   }
 
   const { body, helpers } = generateDeserializerFunction(compiled);
-  const fn = new Function("data", "prototype", "helpers", body);
+  const fn = new Function("$", "proto", "_", body);
   compiled.deserializer = (data: unknown) => fn(data, compiled.prototype, helpers);
-
   cache.set(Model, compiled);
   return compiled;
 }
