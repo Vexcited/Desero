@@ -1,7 +1,7 @@
 {
   "name": "desero",
   "version": "0.4.0",
-  "description": "Quickly write models to deserialize and serialize an object to another.",
+  "description": "Quickly write models to deserialize an object to another.",
   "author": "Mikkel ALMONTE--RINGAUD <contact@vexcited.com>",
   "license": "MIT",
   "repository": {
@@ -12,9 +12,11 @@
     "url": "https://github.com/Vexcited/Desero/issues"
   },
   "keywords": [
-    "serialization",
     "deserialization",
-    "serde"
+    "deserialize",
+    "object",
+    "model",
+    "json"
   ],
   "sideEffects": false,
   "exports": {
@@ -37,12 +39,10 @@
     "build": "bunup"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.4",
-    "@vexcited/eslint-config": "^0.1.1",
-    "bunup": "^0.16.10",
-    "eslint": "^9.39.1",
-    "jiti": "^2.6.1",
-    "terser": "^5.44.1",
+    "@types/bun": "^1.3.5",
+    "@vexcited/eslint-config": "^0.2.0",
+    "bunup": "^0.16.11",
+    "eslint": "^9.39.2",
     "typescript": "^5.9.3"
   }
 }
