@@ -112,7 +112,7 @@ function generateDeserializerFunction(compiled: CompiledModel): Deserializer {
     const safeFieldKey = JSON.stringify(unsafeFieldKey);
     body += `let ${varn}=$[${unsafeRenameFieldKey ? JSON.stringify(unsafeRenameFieldKey) : safeFieldKey}];`;
 
-    if (defaultValue !== undefined) {
+    if (defaultValue !== void 0) {
       _.defaults[varn] = defaultValue;
 
       if (typeof defaultValue === "function") {
@@ -146,7 +146,7 @@ function generateDeserializerFunction(compiled: CompiledModel): Deserializer {
       body += `if(${varn}==null)throw new _.SchemaError("${compiled.name}",${safeFieldKey},\`not optional but got "\${${varn}}"\`);`;
     }
     else {
-      body += `${varn}||=null;`;
+      body += `if(${varn}==null)${varn}=null;`;
     }
 
     // Handle transformations (only for non-null values)
